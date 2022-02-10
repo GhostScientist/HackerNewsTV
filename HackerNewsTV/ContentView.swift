@@ -7,39 +7,32 @@
 
 import SwiftUI
 
-struct Response: Codable {
-    var results: [Result]
-}
-
-struct Result: Codable {
-    var by: String
-    var id: Int
-    var score: Int
-    var text: String
-    var time: Int
-    var title: String
-    var type: String
-    var url: String
-    
-}
-
 struct ContentView: View {
     
-    @State private var results = [Result]()
+    @State private var results: Array<Int> = []
     
-    func fetchCurrentPosts() async {
-        guard let url = URL(string: "https://hacker-news.firebaseio.com/v0/item/192327.json?print=pretty") else { return }
+    func fetchTopStories() async {
+        guard let url = URL(string: "https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty") else { return }
         
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             
             print("DATA : \(data)")
 
-            if let decodedResponse = try? JSONDecoder().decode(Result.self, from: data) {
+            if let decodedResponse = try? JSONDecoder().decode(Array<Int>.self, from: data) {
                 
                 
                 print("RESULT: \(decodedResponse)")
+                
+                let topTwentyFive = Array(decodedResponse[0...24])
+                
+                results = topTwentyFive
+                
+                topTwentyFive.forEach { storyId in
+                    print("StoryID: \(storyId)")
+                }
             }
+            
         } catch {
             print("Invalid data")
         }
@@ -48,16 +41,14 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            Text("Hello, world!")
-                .padding()
             Button {
                 print("Fetching posts from HN")
                 Task {
-                    await fetchCurrentPosts()
+                    await fetchTopStories()
                 }
             } label: {
                 Text("Fetch posts...")
-            }
+            }.foregroundColor(.orange)
         }
        
     }
